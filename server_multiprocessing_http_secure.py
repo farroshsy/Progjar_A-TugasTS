@@ -1,14 +1,11 @@
 import socket
 import os
-import logging
 import multiprocessing
 import threading
 import ssl
 from http import HttpServer
 
-
 httpserver = HttpServer()
-
 
 class ProcessTheClient(threading.Thread):
     def __init__(self, connection, address):
@@ -28,12 +25,10 @@ class ProcessTheClient(threading.Thread):
                     rcv = rcv + d
                     if rcv[-2:] == '\r\n':
                         # end of command, proses string
-                        logging.warning("data dari client: {}" . format(rcv))
                         hasil = httpserver.proses(rcv)
                         # hasil akan berupa bytes
                         # untuk bisa ditambahi dengan string, maka string harus di encode
                         hasil = hasil + "\r\n\r\n".encode()
-                        logging.warning("balas ke  client: {}" . format(hasil))
                         # hasil sudah dalam bentuk bytes
                         self.connection.sendall(hasil)
                         rcv = ""
@@ -43,7 +38,6 @@ class ProcessTheClient(threading.Thread):
             except OSError as e:
                 pass
         self.connection.close()
-
 
 class Server(multiprocessing.Process):
     def __init__(self, hostname='testing.net'):
@@ -56,23 +50,20 @@ class Server(multiprocessing.Process):
         multiprocessing.Process.__init__(self)
 
     def run(self):
-        self.my_socket = self.context.wrap_socket(socket.socket(socket.AF_INET, socket.SOCK_STREAM), server_side=True)
-        self.my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.my_socket.bind(('0.0.0.0', 8891))
-        self.my_socket.listen(1)
+        my_socket = self.context.wrap_socket(socket.socket(socket.AF_INET, socket.SOCK_STREAM), server_side=True)
+        my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        my_socket.bind(('0.0.0.0', 8893))
+        my_socket.listen(1)
         while True:
-            self.connection, self.client_address = self.my_socket.accept()
-            logging.warning("connection from {}".format(self.client_address))
+            self.connection, self.client_address = my_socket.accept()
 
             clt = ProcessTheClient(self.connection, self.client_address)
             clt.start()
             self.the_clients.append(clt)
 
-
 def main():
     svr = Server()
     svr.start()
-
 
 if __name__ == "__main__":
     main()
