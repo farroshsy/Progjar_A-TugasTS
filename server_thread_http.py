@@ -3,7 +3,6 @@ import socket
 import threading
 import time
 import sys
-import logging
 from http import HttpServer
 
 httpserver = HttpServer()
@@ -23,10 +22,8 @@ class ProcessTheClient(threading.Thread):
                     d = data.decode()
                     rcv=rcv+d
                     if rcv[-2:]=='\r\n':
-                        logging.warning("data dari client: {}" . format(rcv))
                         hasil = httpserver.proses(rcv)
                         hasil = hasil.decode().replace("Connection: keep-alive", "Connection: close").encode() + "\r\n\r\n".encode()
-                        logging.warning("balas ke  client: {}" . format(hasil))
                         self.connection.sendall(hasil)
                         rcv=""
                         self.connection.close()
@@ -48,8 +45,6 @@ class Server(threading.Thread):
         self.my_socket.listen(100)
         while True:
             self.connection, self.client_address = self.my_socket.accept()
-            logging.warning("connection from {}".format(self.client_address))
-
             clt = ProcessTheClient(self.connection, self.client_address)
             clt.start()
             self.the_clients.append(clt)
